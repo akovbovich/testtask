@@ -9,11 +9,11 @@ import model._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 
-object ConsoleStream extends App {
+object ConsoleStreamDemo extends App {
   implicit val as = ActorSystem("console-tick-stream")
   implicit val mat = ActorMaterializer
 
-  val intervalSeconds = args.headOption.flatMap(_.toIntOption).getOrElse(5)
+  val intervalSecondsArg = args.headOption.flatMap(_.toIntOption).getOrElse(5)
 
   def parseTick(s: String): Tick = {
     val ts :: px :: Nil = s.split(',').take(2).map(_.trim).toList
@@ -63,5 +63,5 @@ object ConsoleStream extends App {
     "input timestamp, price pairs separated by newlines, e.g. 1,100\\n2,110"
   )
 
-  stdin.via(emitter(intervalSeconds, 1)).to(stdout).run()
+  stdin.via(emitter(intervalSecondsArg, 1)).to(stdout).run()
 }
