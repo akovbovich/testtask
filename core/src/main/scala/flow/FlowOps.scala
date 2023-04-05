@@ -49,6 +49,8 @@ final case class AggregateWithTimer[In, Agg, Out](
         if (isClosed(in)) completeStage()
       }
 
+      override def onUpstreamFinish(): Unit = {}
+
       override def onPush(): Unit = {
         if (aggregated == null) aggregated = allocate()
         val (updated, resultOpt) = aggregate(aggregated, grab(in))
