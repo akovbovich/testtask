@@ -18,6 +18,8 @@ object OHLC {
     private var current: Option[OHLC] = None
     private var remainingDuration: Duration = interval
 
+    require(interval.seconds > 0, "Interval should be > 0")
+
     private def openIntervalTs(tickTs: Timestamp): Timestamp =
       (0L to tickTs.epoch by interval.seconds)
         .map(Timestamp.apply)
