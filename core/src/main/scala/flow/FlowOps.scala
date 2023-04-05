@@ -23,10 +23,9 @@ final case class AggregateWithTimer[In, Agg, Out](
 ) extends GraphStage[FlowShape[In, Out]] {
 
   private[this] var aggregated: Agg = null.asInstanceOf[Agg]
-  private[this] var upstreamFinished = false
 
-  private val in: Inlet[In] = Inlet[In](s"AggregateWithTimer.in")
-  private val out: Outlet[Out] = Outlet[Out](s"AggregateWithTimer.out")
+  private val in: Inlet[In] = Inlet[In]("AggregateWithTimer.in")
+  private val out: Outlet[Out] = Outlet[Out]("AggregateWithTimer.out")
 
   override val shape: FlowShape[In, Out] = FlowShape(in, out)
 
@@ -35,7 +34,7 @@ final case class AggregateWithTimer[In, Agg, Out](
 
       override def preStart(): Unit = {
         emitOnTimer.foreach { case (_, interval) =>
-          scheduleAtFixedRate(s"AggregateWithTimer.Timer", interval, interval)
+          scheduleAtFixedRate("AggregateWithTimer.Timer", interval, interval)
         }
       }
 
@@ -47,11 +46,7 @@ final case class AggregateWithTimer[In, Agg, Out](
             resultOpt.foreach(Emit)
           }
         }
-        if (upstreamFinished) completeStage()
-      }
-
-      override def onUpstreamFinish(): Unit = {
-        upstreamFinished = true
+        if (isClosed(in)) completeStage()
       }
 
       override def onPush(): Unit = {
