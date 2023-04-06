@@ -11,7 +11,7 @@ final class FlowOps[-In, +Out, +Mat](flow: Flow[In, Out, Mat]) {
 
   def aggregateWithTimer[Agg, Emit](allocate: () => Agg)(
       aggregate: (Agg, Out) => (Agg, Option[Emit]),
-      emitOnTimer: Option[(Agg => (Agg, Option[Emit]), FiniteDuration)]
+      emitOnTimer: (Agg => (Agg, Option[Emit]), FiniteDuration)
   ): Repr[Emit] =
     flow.via(AggregateWithTimer(allocate, aggregate, emitOnTimer))
 }
@@ -19,7 +19,7 @@ final class FlowOps[-In, +Out, +Mat](flow: Flow[In, Out, Mat]) {
 final case class AggregateWithTimer[In, Agg, Out](
     allocate: () => Agg,
     aggregate: (Agg, In) => (Agg, Option[Out]),
-    emitOnTimer: Option[(Agg => (Agg, Option[Out]), FiniteDuration)]
+    emitOnTimer: (Agg => (Agg, Option[Out]), FiniteDuration)
 ) extends GraphStage[FlowShape[In, Out]] {
 
   private[this] var aggregated: Agg = null.asInstanceOf[Agg]
@@ -33,13 +33,13 @@ final case class AggregateWithTimer[In, Agg, Out](
     new TimerGraphStageLogic(shape) with InHandler with OutHandler {
 
       override def preStart(): Unit = {
-        emitOnTimer.foreach { case (_, interval) =>
+        emitOnTimer match { case (_, interval) =>
           scheduleAtFixedRate("AggregateWithTimer.Timer", interval, interval)
         }
       }
 
       override protected def onTimer(timerKey: Any): Unit = {
-        emitOnTimer.foreach { case (isReadyOnTimer, _) =>
+        emitOnTimer match { case (isReadyOnTimer, _) =>
           if (aggregated != null) {
             val (updated, resultOpt) = isReadyOnTimer(aggregated)
             aggregated = updated

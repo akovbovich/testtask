@@ -44,11 +44,10 @@ object ConsoleStreamDemo extends App {
       }
     }
 
-    val emitOnTimer: Option[(OHLC.Aggregator => T, FiniteDuration)] = Some(
+    val emitOnTimer: (OHLC.Aggregator => T, FiniteDuration) = (
       { agg =>
         agg.touch(Duration(clockSeconds))
-        if (agg.isIntervalClosed && agg.nonEmpty)
-          allocate -> Some(agg.get)
+        if (agg.isIntervalClosed && agg.nonEmpty) allocate -> Some(agg.get)
         else agg -> None
       },
       FiniteDuration(clockSeconds, TimeUnit.SECONDS)
