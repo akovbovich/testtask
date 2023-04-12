@@ -15,16 +15,18 @@ object ConsoleStreamDemo extends App {
 
   val intervalSecondsArg = args.headOption.flatMap(_.toIntOption).getOrElse(5)
 
-  def parseTick(s: String): Tick = {
-    val ts :: px :: Nil = s.split(',').take(2).map(_.trim).toList
-    Tick(Timestamp(ts.toLong), Price(BigDecimal(px)))
+  def parseTick(s: String): Option[Tick] = {
+    s.split(',').take(2).map(_.trim).toList match {
+      case ts :: px :: Nil =>
+        Some(Tick(Timestamp(ts.toLong), Price(BigDecimal(px))))
+      case _ => None
+    }
   }
 
   val stdin: Source[Tick, NotUsed] =
     Source
       .unfold(())(_ => Some(() -> Option(io.StdIn.readLine()).getOrElse("")))
-      .map(parseTick)
-      .recoverWith { case _ => stdin }
+      .mapConcat(parseTick)
       .withAttributes(Attributes(IODispatcher))
 
   def emitter(

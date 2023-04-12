@@ -10,7 +10,7 @@ final case class OHLC(
     interval: Duration
 ) {
   override def toString: String =
-    s"OHLC(o=${open.value},h=${high.value},l=${low.value},c=${close.value},period=[${openTs.epoch},${closeTs.epoch}),interval=${interval.seconds})"
+    s"OHLC(${open.value},${high.value},${low.value},${close.value},period=[${openTs.epoch},${closeTs.epoch}),interval=${interval.seconds})"
 }
 
 object OHLC {

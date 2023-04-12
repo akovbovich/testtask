@@ -33,23 +33,25 @@ final case class AggregateWithTimer[In, Agg, Out](
     new TimerGraphStageLogic(shape) with InHandler with OutHandler {
 
       override def preStart(): Unit = {
-        emitOnTimer match { case (_, interval) =>
-          scheduleAtFixedRate("AggregateWithTimer.Timer", interval, interval)
+        emitOnTimer match {
+          case (_, interval) =>
+            scheduleAtFixedRate("AggregateWithTimer.Timer", interval, interval)
         }
       }
 
       override protected def onTimer(timerKey: Any): Unit = {
-        emitOnTimer match { case (isReadyOnTimer, _) =>
-          if (aggregated != null) {
-            val (updated, resultOpt) = isReadyOnTimer(aggregated)
-            aggregated = updated
-            resultOpt.foreach(Emit)
-          }
+        emitOnTimer match {
+          case (isReadyOnTimer, _) =>
+            if (aggregated != null) {
+              val (updated, resultOpt) = isReadyOnTimer(aggregated)
+              aggregated = updated
+              resultOpt.foreach(Emit)
+            }
         }
         if (isClosed(in)) completeStage()
       }
 
-      override def onUpstreamFinish(): Unit = {}
+      override def onUpstreamFinish(): Unit = { /* do nothing */ }
 
       override def onPush(): Unit = {
         if (aggregated == null) aggregated = allocate()
@@ -61,8 +63,8 @@ final case class AggregateWithTimer[In, Agg, Out](
 
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
-      setHandlers(in, out, this)
-
       private def Emit(value: Out): Unit = emit(out, value)
+
+      setHandlers(in, out, this)
     }
 }
