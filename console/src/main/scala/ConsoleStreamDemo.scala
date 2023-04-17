@@ -33,11 +33,14 @@ object ConsoleStreamDemo extends App {
       intervalSeconds: Long,
       clockSeconds: Long
   ): Flow[Tick, OHLC, NotUsed] = {
-    type T = (OHLC.Aggregator, Option[OHLC])
+
+    require(intervalSeconds >= clockSeconds, "Interval should be >= clock interval")
+
+    type Out = (OHLC.Aggregator, Option[OHLC])
 
     def allocate = new OHLC.Aggregator(Duration(intervalSeconds))
 
-    val aggregate: (OHLC.Aggregator, Tick) => T = { case (agg, tick) =>
+    val aggregate: (OHLC.Aggregator, Tick) => Out = { case (agg, tick) =>
       if (agg.addTick(tick)) agg -> None
       else {
         val newAgg = allocate
@@ -46,9 +49,9 @@ object ConsoleStreamDemo extends App {
       }
     }
 
-    val emitOnTimer: (OHLC.Aggregator => T, FiniteDuration) = (
+    val emitOnTimer: (OHLC.Aggregator => Out, FiniteDuration) = (
       { agg =>
-        agg.touch(Duration(clockSeconds))
+        agg.reduceDuration(Duration(clockSeconds))
         if (agg.isIntervalClosed && agg.nonEmpty) allocate -> Some(agg.get)
         else agg -> None
       },

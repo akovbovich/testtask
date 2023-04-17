@@ -22,8 +22,8 @@ object OHLC {
 
     private def openIntervalTs(tickTs: Timestamp): Timestamp =
       (0L to tickTs.epoch by interval.seconds)
-        .map(Timestamp.apply)
         .lastOption
+        .map(Timestamp.apply)
         .getOrElse(Timestamp.Zero)
 
     private def closeIntervalTsExclusive(tickTs: Timestamp): Timestamp =
@@ -61,7 +61,7 @@ object OHLC {
       }
     }
 
-    def touch(duration: Duration): Unit = remainingDuration -= duration
+    def reduceDuration(duration: Duration): Unit = remainingDuration -= duration
 
     def isIntervalClosed: Boolean = remainingDuration == Duration.Zero
 
